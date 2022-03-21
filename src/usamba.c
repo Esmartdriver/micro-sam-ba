@@ -382,6 +382,7 @@ exit:
 		fprintf(stderr, "Operation failed\n");
 		return -1;
 	} else {
+        fprintf(stderr, "Operation was Successful\n");
 		return 0;
 	}
 }

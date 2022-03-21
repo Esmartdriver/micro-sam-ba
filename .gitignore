@@ -3,5 +3,6 @@ GRTAGS
 GTAGS
 *.o
 *~
+*.bin
 
 usamba
