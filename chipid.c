@@ -81,7 +81,7 @@ bool chipid_check_serie(int fd, const struct _chip_serie* serie, const struct _c
 
 	// Identify chip and read its flash infos
 	for (int i = 0; i < serie->nb_chips; i++) {
-		if (serie->chips[i].cidr == cidr && serie->chips[i].exid == exid) {
+		if (serie->chips[i].cidr == (cidr & 0xFFFFFFF0) && serie->chips[i].exid == exid) {
 			*chip = &serie->chips[i];
 			return true;
 		}
@@ -92,6 +92,8 @@ bool chipid_check_serie(int fd, const struct _chip_serie* serie, const struct _c
 
 const struct _chip_serie* chipid_identity_serie(int fd, const struct _chip** chip)
 {
+	//*chip = &_chips_samx7[18]; 
+	//return &_chip_series[18];
 	for (int i = 0; i < ARRAY_SIZE(_chip_series); i++)
 		if (chipid_check_serie(fd, &_chip_series[i], chip))
 			return &_chip_series[i];
