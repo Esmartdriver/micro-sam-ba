@@ -26,7 +26,6 @@ BINARY=usamba
 OBJS = $(SRCS:.c=.o)
 
 ./src/$(BINARY): $(OBJS)
-	@cp ./src/$(BINARY) ./
 
 
 clean:
