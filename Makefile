@@ -1,10 +1,34 @@
-CFLAGS=-std=gnu99 -Wall
+# CFLAGS=-std=gnu99 -Wall
+
+# BINARY=usamba
+# SOURCES = sources/usamba.c sources/comm.c sources/chipid.c sources/eefc.c
+# OBJS = $(SOURCES:.c=.o)
+
+# $(BINARY): $(OBJS)
+
+# clean:
+# 	@rm -f $(OBJS) $(BINARY)
+
+# binaries will be generated with this name (.elf, .bin, .hex, etc)
+
+# Put your source files here (or *.c, etc)
+SRCS =  ./src/usamba.c
+SRCS += ./src/comm.c
+SRCS += ./src/chipid.c
+SRCS += ./src/eefc.c
+
+
+CFLAGS=-std=gnu99 -Wall -O2 -Wfatal-errors
+CFLAGS += -I./src
+
 
 BINARY=usamba
-SOURCES = usamba.c comm.c chipid.c eefc.c
-OBJS = $(SOURCES:.c=.o)
+OBJS = $(SRCS:.c=.o)
 
-$(BINARY): $(OBJS)
+./src/$(BINARY): $(OBJS)
+	@cp ./src/$(BINARY) ./
+
 
 clean:
 	@rm -f $(OBJS) $(BINARY)
+

@@ -8,7 +8,7 @@ microcontrollers:
 
   - Atmel SAME70/S70/V70/V71
 
-Communication with SAM-BA bootloader is only supported through USB.
+Communication with SAM-BA bootloader only supported through USB and UART (UART untested).
 
 Before using the tool, the MCU must be put in "Boot from ROM" mode, either by
 fully erasing it using the ERASE pin or by clearing GPVNM1 (see datasheet for
