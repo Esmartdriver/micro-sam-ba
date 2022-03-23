@@ -157,6 +157,9 @@ static void usage(char* prog)
 	printf("- Erasing Flash:\n");
 	printf("    %s <port> erase-all\n", prog);
 	printf("\n");
+    printf("- Erase 16 Pages:\n");
+	printf("    %s <port> erase-pages <start-address>\n", prog);
+	printf("\n");
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
 	printf("\n");
@@ -175,6 +178,7 @@ enum {
 	CMD_GPNVM_GET = 5,
 	CMD_GPNVM_SET = 6,
 	CMD_GPNVM_CLEAR = 7,
+	CMD_ERASE_PAGES = 8,
 };
 
 int main(int argc, char *argv[])
@@ -230,7 +234,15 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
-	} else if (!strcmp(cmd_text, "gpnvm")) {
+	}else if (!strcmp(cmd_text, "erase-pages")) {
+		if (argc == 4) {
+			command = CMD_ERASE_PAGES;
+			addr = strtol(argv[3], NULL, 0);
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		}
+	}  else if (!strcmp(cmd_text, "gpnvm")) {
 		if (argc == 5) {
 			if (!strcmp(argv[3], "get")) {
 				command = CMD_GPNVM_GET;
@@ -339,6 +351,15 @@ int main(int argc, char *argv[])
 			break;
 		}
 
+		case CMD_ERASE_PAGES:
+		{
+			printf("Erasing 16 pages from %d\n", addr);
+			if (eefc_erase_16pages(fd, chip, addr)) {
+				err = false;
+			}
+			break;
+		}
+
 		case CMD_GPNVM_GET:
 		{
 			printf("Getting GPNVM%d\n", addr);
@@ -364,7 +385,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
-
+		
 		case CMD_GPNVM_CLEAR:
 		{
 			printf("Clearing GPNVM%d\n", addr);
@@ -373,6 +394,7 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
+
 	}
 
 exit:
