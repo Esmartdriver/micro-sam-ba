@@ -158,7 +158,7 @@ static void usage(char* prog)
 	printf("    %s <port> erase-all\n", prog);
 	printf("\n");
     printf("- Erase 16 Pages:\n");
-	printf("    %s <port> erase-pages <start-address>\n", prog);
+	printf("    %s <port> erase-pages <first-page>\n", prog);
 	printf("\n");
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
@@ -179,6 +179,7 @@ enum {
 	CMD_GPNVM_SET = 6,
 	CMD_GPNVM_CLEAR = 7,
 	CMD_ERASE_PAGES = 8,
+	CMD_RESET = 9,
 };
 
 int main(int argc, char *argv[])
@@ -262,7 +263,15 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
-	} else {
+	}else if (!strcmp(cmd_text, "reset")) {
+		if (argc == 3) {
+			command = CMD_RESET;
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		} 
+
+	}else {
 		fprintf(stderr, "Error: unknown command '%s'\n", cmd_text);
 	}
 	if (err) {
@@ -385,11 +394,20 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
-		
+
 		case CMD_GPNVM_CLEAR:
 		{
 			printf("Clearing GPNVM%d\n", addr);
 			if (eefc_clear_gpnvm(fd, chip, addr)) {
+				err = false;
+			}
+			break;
+		}
+
+		case CMD_RESET:
+		{
+			printf("Reseting device...\n");
+			if (samba_write_word(fd, 0x400e1800, 0xA5000009)){
 				err = false;
 			}
 			break;
