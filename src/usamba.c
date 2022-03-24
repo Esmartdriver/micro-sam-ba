@@ -24,6 +24,8 @@
 #include "utils.h"
 
 #define BUFFER_SIZE 8192
+#define RESET_CR_ADDR 0x400e1800
+#define RESET_KEY 0xA5000009
 
 static bool get_file_size(const char* filename, uint32_t* size)
 {
@@ -163,6 +165,9 @@ static void usage(char* prog)
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
 	printf("\n");
+	printf("- Identify chip by its unique identifier code:\n");
+	printf("    %s <port> identify\n", prog);
+	printf("\n");
 	printf("for all commands:\n");
 	printf("    <port> is the USB device node for the SAM-BA bootloader, for\n");
 	printf("         example '/dev/ttyACM0'\n");
@@ -180,6 +185,7 @@ enum {
 	CMD_GPNVM_CLEAR = 7,
 	CMD_ERASE_PAGES = 8,
 	CMD_RESET = 9,
+	CMD_IDENTIFY = 10,
 };
 
 int main(int argc, char *argv[])
@@ -238,6 +244,14 @@ int main(int argc, char *argv[])
 	}else if (!strcmp(cmd_text, "erase-pages")) {
 		if (argc == 4) {
 			command = CMD_ERASE_PAGES;
+			addr = strtol(argv[3], NULL, 0);
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		}
+	}else if (!strcmp(cmd_text, "identify")) {
+		if (argc == 3) {
+			command = CMD_IDENTIFY;
 			addr = strtol(argv[3], NULL, 0);
 			err = false;
 		} else {
@@ -407,7 +421,16 @@ int main(int argc, char *argv[])
 		case CMD_RESET:
 		{
 			printf("Reseting device...\n");
-			if (samba_write_word(fd, 0x400e1800, 0xA5000009)){
+			if (samba_write_word(fd, RESET_CR_ADDR, RESET_KEY)){
+				err = false;
+			}
+			break;
+		}
+
+		case CMD_IDENTIFY:
+		{
+			printf("Identifying device by unique identifier\n");
+			if (samba_write_word(fd, RESET_CR_ADDR, RESET_KEY)){
 				err = false;
 			}
 			break;
