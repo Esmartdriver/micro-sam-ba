@@ -26,6 +26,10 @@
 #define BUFFER_SIZE 8192
 #define RESET_CR_ADDR 0x400e1800
 #define RESET_KEY 0xA5000009
+#define GPNVM_BIT1 1
+#define EEFC_FCR_STUI  0x5A00000E
+#define EEFC_FCR_ADDR  0x400E0C04
+#define EEFC_FCR_SPUI  0x5A00000F
 
 static bool get_file_size(const char* filename, uint32_t* size)
 {
@@ -165,8 +169,14 @@ static void usage(char* prog)
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
 	printf("\n");
+	printf("- Exit Samba: \n");
+	printf("    %s <port> exit-samba\n", prog);
+	printf("\n");
 	printf("- Identify chip by its unique identifier code:\n");
 	printf("    %s <port> identify\n", prog);
+	printf("\n");
+	printf("- Reset device:\n");
+	printf("    %s <port> reset\n", prog);
 	printf("\n");
 	printf("for all commands:\n");
 	printf("    <port> is the USB device node for the SAM-BA bootloader, for\n");
@@ -186,6 +196,7 @@ enum {
 	CMD_ERASE_PAGES = 8,
 	CMD_RESET = 9,
 	CMD_IDENTIFY = 10,
+	CMD_EXIT_SAMBA = 11,
 };
 
 int main(int argc, char *argv[])
@@ -252,7 +263,6 @@ int main(int argc, char *argv[])
 	}else if (!strcmp(cmd_text, "identify")) {
 		if (argc == 3) {
 			command = CMD_IDENTIFY;
-			addr = strtol(argv[3], NULL, 0);
 			err = false;
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
@@ -277,6 +287,14 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+	}else if (!strcmp(cmd_text, "exit-samba")) {
+		if (argc == 3) {
+			command = CMD_EXIT_SAMBA;
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		} 
+
 	}else if (!strcmp(cmd_text, "reset")) {
 		if (argc == 3) {
 			command = CMD_RESET;
@@ -382,7 +400,19 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
-
+		case CMD_EXIT_SAMBA:
+		{
+			printf("Exiting Samba...\n");
+			printf("Setting GPNVM%d\n", GPNVM_BIT1);
+			if (eefc_set_gpnvm(fd, chip, GPNVM_BIT1)) {
+				err = false;
+			}
+		    printf("Reseting device...\n");
+			if (samba_write_word(fd, RESET_CR_ADDR, RESET_KEY)){
+				err = false;
+			}
+			break;
+		}
 		case CMD_GPNVM_GET:
 		{
 			printf("Getting GPNVM%d\n", addr);
@@ -429,10 +459,23 @@ int main(int argc, char *argv[])
 
 		case CMD_IDENTIFY:
 		{
+			
+
 			printf("Identifying device by unique identifier\n");
-			if (samba_write_word(fd, RESET_CR_ADDR, RESET_KEY)){
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)){
+				err = false;
+				printf("STUI command sent successfully...\n");
+			}
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", 0, 1024, "uniqueIdentifier.bin");
+			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
 				err = false;
 			}
+						printf("Identifying device by unique identifier\n");
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)){
+				err = false;
+				printf("SPUI command sent successfully...\n");
+			}
+  
 			break;
 		}
 
