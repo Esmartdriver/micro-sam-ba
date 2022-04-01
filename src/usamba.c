@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
 				err = false;
 				printf("STUI command sent successfully...\n");
 			}
-			printf("Reading %d bytes at 0x%08x to file '%s'\n", 0, 1024, "uniqueIdentifier.bin");
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0 , "uniqueIdentifier.bin");
 			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
 				err = false;
 			}
