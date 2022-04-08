@@ -172,7 +172,7 @@ static void usage(char* prog)
 	printf("- Exit Samba: \n");
 	printf("    %s <port> exit-samba\n", prog);
 	printf("\n");
-	printf("- Identify chip by its unique identifier code:\n");
+	printf("- Identify chip by its unique identifier code and serial number:\n");
 	printf("    %s <port> identify\n", prog);
 	printf("\n");
 	printf("- Reset device:\n");
@@ -475,7 +475,27 @@ int main(int argc, char *argv[])
 				err = false;
 				printf("SPUI command sent successfully...\n");
 			}
-  
+
+			printf("Converting Binaries to Readable...\n");
+            static const size_t BufferSize = 1024;
+   		    int i;
+            FILE *ptr;
+            unsigned char buffer2[BufferSize];
+
+            ptr = fopen("uniqueIdentifier.bin","rb");
+            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+            printf("Unique ID: ");
+            for(i = 0; i < 20; i++)
+               printf("%c", (int)buffer2[i]);
+
+            printf("\nSerial Number:");
+            for(i = 113; i < 150; i++)
+            printf("%c", (int)buffer2[i]);
+            printf("\n");
+
+            fclose (ptr);
+            
+            
 			break;
 		}
 
