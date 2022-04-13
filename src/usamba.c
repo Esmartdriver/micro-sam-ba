@@ -30,6 +30,7 @@
 #define EEFC_FCR_STUI  0x5A00000E
 #define EEFC_FCR_ADDR  0x400E0C04
 #define EEFC_FCR_SPUI  0x5A00000F
+char information[65];
 
 static bool get_file_size(const char* filename, uint32_t* size)
 {
@@ -143,8 +144,64 @@ static bool verify_flash(int fd, const struct _chip* chip, const char* filename,
 		addr += count;
 	}
 
-	fclose(file);
 	return true;
+	fclose(file);
+}
+void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool err)
+{
+         information[0] = 'D';
+         information[1] = 'U';
+         information[2] = 'M';
+         information[3] = 'P';
+         information[4] = '_';
+
+			printf("Identifying device by unique identifier\n");
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)){
+				err = false;
+				printf("STUI command sent successfully...\n");
+			}
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0 , "uniqueIdentifier.bin");
+			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
+				err = false;
+			}
+						printf("Identifying device by unique identifier\n");
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)){
+				err = false;
+				printf("SPUI command sent successfully...\n");
+			}
+
+			printf("Converting Binaries to Readable...\n");
+            static const size_t BufferSize = 1024;
+   		    int i;
+            FILE *ptr;
+            unsigned char buffer2[BufferSize];
+
+            ptr = fopen("uniqueIdentifier.bin","rb");
+            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+            printf("Unique ID: ");
+            for(i = 1; i < 19; i++){
+            	printf("%c", (int)buffer2[i]);
+               if(!( '\0'==  buffer2[i]))
+               information[i+4] =  buffer2[i];
+               else 
+               	information[i+4] =  ' ';
+               }
+            information[23] =  '_';
+            information[24] =  '_';
+            printf("\nSerial Number:");
+            for(i = 119; i < 150; i++){
+            	printf("%c", (int)buffer2[i]);
+            	if(!( '\0'==  buffer2[i]))
+               information[i-99] = buffer2[i];
+               else 
+               	information[i-99] =  ' ';
+            }
+            printf("\n");
+            
+            fclose (ptr);
+            information[64] = '\0'; 
+            printf("\n");
+            
 }
 
 static void usage(char* prog)
@@ -153,6 +210,7 @@ static void usage(char* prog)
 	printf("\n");
 	printf("- Reading Flash:\n");
 	printf("    %s <port> read <filename> <start-address> <size>\n", prog);
+	printf("    Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial ID  \n", prog);
 	printf("\n");
 	printf("- Writing Flash:\n");
 	printf("    %s <port> write <filename> <start-address>\n", prog);
@@ -165,6 +223,15 @@ static void usage(char* prog)
 	printf("\n");
     printf("- Erase 16 Pages:\n");
 	printf("    %s <port> erase-pages <first-page>\n", prog);
+	printf("\n");
+   printf("- Reading External Flash:\n");
+	printf("    %s <port> ext-read <filename> <start-address> <size>\n", prog);
+	printf("\n");
+	printf("- Writing External Flash:\n");
+	printf("    %s <port> ext-write <filename> <start-address>\n", prog);
+	printf("\n");
+	printf("- Erasing External Flash:\n");
+	printf("    %s <port> ext-erase-all\n", prog);
 	printf("\n");
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
@@ -187,16 +254,20 @@ static void usage(char* prog)
 
 enum {
 	CMD_READ = 1,
-	CMD_WRITE = 2,
-	CMD_VERIFY = 3,
+	CMD_READ_CUSTOM_NAME = 2,
+	CMD_WRITE = 3,
 	CMD_ERASE_ALL = 4,
-	CMD_GPNVM_GET = 5,
-	CMD_GPNVM_SET = 6,
-	CMD_GPNVM_CLEAR = 7,
-	CMD_ERASE_PAGES = 8,
-	CMD_RESET = 9,
-	CMD_IDENTIFY = 10,
-	CMD_EXIT_SAMBA = 11,
+   CMD_ERASE_PAGES = 5,
+	CMD_VERIFY = 6,
+	CMD_GPNVM_GET = 7,
+	CMD_GPNVM_SET = 8,
+	CMD_GPNVM_CLEAR = 9,
+	CMD_RESET = 10,
+	CMD_IDENTIFY = 11,
+	CMD_READ_EXT_FLASH = 12,
+	CMD_WRITE_EXT_FLASH = 13,
+	CMD_ERASE_EXT_FLASH = 14,
+	CMD_EXIT_SAMBA = 15,
 };
 
 int main(int argc, char *argv[])
@@ -219,12 +290,18 @@ int main(int argc, char *argv[])
 	char* cmd_text = argv[2];
 	if (!strcmp(cmd_text, "read")) {
 		if (argc == 6) {
-			command = CMD_READ;
+			command = CMD_READ_CUSTOM_NAME;
 			filename = argv[3];
 			addr = strtol(argv[4], NULL, 0);
 			size = strtol(argv[5], NULL, 0);
 			err = false;
-		} else {
+		}else if (argc == 5) {
+			command = CMD_READ;
+			filename = "TESSSTTTT JTE TEST ÇA MOI AVEC MES GROS TEST!!! OH QUE OUI! DU GROS TESTING! TEST! TEST! TEST!";
+			addr = strtol(argv[3], NULL, 0);
+			size = strtol(argv[4], NULL, 0);
+			err = false;
+		}  else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
 	} else if (!strcmp(cmd_text, "write")) {
@@ -232,6 +309,33 @@ int main(int argc, char *argv[])
 			command = CMD_WRITE;
 			filename = argv[3];
 			addr = strtol(argv[4], NULL, 0);
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		}
+	}
+		if (!strcmp(cmd_text, "ext-read")) {
+		if (argc == 6) {
+			command = CMD_READ_EXT_FLASH;
+			filename = argv[3];
+			addr = strtol(argv[4], NULL, 0);
+			size = strtol(argv[5], NULL, 0);
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		}
+	} else if (!strcmp(cmd_text, "ext-write")) {
+		if (argc == 5) {
+			command = CMD_WRITE_EXT_FLASH;
+			filename = argv[3];
+			addr = strtol(argv[4], NULL, 0);
+			err = false;
+		} else {
+			fprintf(stderr, "Error: invalid number of arguments\n");
+		}
+	} else if (!strcmp(cmd_text, "ext-erase-all")) {
+		if (argc == 3) {
+			command = CMD_ERASE_EXT_FLASH;
 			err = false;
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
@@ -342,15 +446,29 @@ int main(int argc, char *argv[])
 
 	// Execute command
 	switch (command) {
-		case CMD_READ:
+		case CMD_READ_CUSTOM_NAME:
 		{
-			printf("CMD: READ\n");
-			printf("Reading %d bytes at 0x%08x to file '%s'\n", size, addr, filename);
+			printf("CMD: READ WITH CUSTOM FILE NAME\n");
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", size, addr, filename );
 			if (read_flash(fd, chip, addr, size, filename)) {
 				err = false;
 			}
 			break;
 		}
+
+		case CMD_READ:
+		{
+			identify_uniqueID(fd, chip, filename, err);
+         filename = information;
+         strncat(filename, ".bin",4);
+			printf("CMD: READ\n");
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", size, addr, filename );
+			if (read_flash(fd, chip, addr, size, filename)) {
+				err = false;
+			}
+			break;
+		}
+
 
 		case CMD_WRITE:
 		{
@@ -400,6 +518,31 @@ int main(int argc, char *argv[])
 			}
 			break;
 		}
+		case CMD_READ_EXT_FLASH:
+		{
+			printf("CMD: READ\n");
+			printf("Reading %d bytes at 0x%08x to file '%s'\n", size, addr, filename);
+			if (read_flash(fd, chip, addr, size, filename)) {
+				err = false;
+			}
+			break;
+		}
+
+		case CMD_WRITE_EXT_FLASH:
+		{
+			printf("CMD: WRITE\n");
+			if (get_file_size(filename, &size)) {
+				printf("Unlocking %d bytes at 0x%08x\n", size, addr);
+				if (eefc_unlock(fd, chip, &locks, addr, size)) {
+					printf("Writing %d bytes at 0x%08x from file '%s'\n", size, addr, filename);
+					if (write_flash(fd, chip, filename, addr, size)) {
+						err = false;
+					}
+				}
+			}
+			break;
+		}
+
 		case CMD_EXIT_SAMBA:
 		{
 			printf("Exiting Samba...\n");
@@ -485,12 +628,14 @@ int main(int argc, char *argv[])
             ptr = fopen("uniqueIdentifier.bin","rb");
             const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
             printf("Unique ID: ");
-            for(i = 0; i < 20; i++)
+            for(i = 0; i < 20; i++){
                printf("%c", (int)buffer2[i]);
+               }
 
             printf("\nSerial Number:");
-            for(i = 113; i < 150; i++)
+            for(i = 113; i < 150; i++){
             printf("%c", (int)buffer2[i]);
+            }
             printf("\n");
 
             fclose (ptr);
