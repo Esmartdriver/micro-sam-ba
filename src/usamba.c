@@ -179,6 +179,7 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
             unsigned char buffer2[BufferSize];
 
             ptr = fopen("uniqueIdentifier.bin","rb");
+            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
             printf("Unique ID: ");
             for(i = 1; i < 19; i++){
             	printf("%c", (int)buffer2[i]);
@@ -289,6 +290,7 @@ int main(int argc, char *argv[])
 	}
 	port = argv[1];
 	char* cmd_text = argv[2];
+
 	if (!strcmp(cmd_text, "read")) {
 		if (argc == 6) {
 			command = CMD_READ_CUSTOM_NAME;
@@ -298,13 +300,13 @@ int main(int argc, char *argv[])
 			err = false;
 		}else if (argc == 5) {
 			command = CMD_READ;
-			filename = "TESSSTTTT JTE TEST ÇA MOI AVEC MES GROS TEST!!! OH QUE OUI! DU GROS TESTING! TEST! TEST! TEST!";
 			addr = strtol(argv[3], NULL, 0);
 			size = strtol(argv[4], NULL, 0);
 			err = false;
 		}  else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	} else if (!strcmp(cmd_text, "write")) {
 		if (argc == 5) {
 			command = CMD_WRITE;
@@ -314,8 +316,8 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
-	}
-		if (!strcmp(cmd_text, "ext-read")) {
+
+	}else if (!strcmp(cmd_text, "ext-read")) {
 		if (argc == 6) {
 			command = CMD_READ_EXT_FLASH;
 			filename = argv[3];
@@ -325,6 +327,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	} else if (!strcmp(cmd_text, "ext-write")) {
 		if (argc == 5) {
 			command = CMD_WRITE_EXT_FLASH;
@@ -334,6 +337,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	} else if (!strcmp(cmd_text, "ext-erase-all")) {
 		if (argc == 3) {
 			command = CMD_ERASE_EXT_FLASH;
@@ -341,6 +345,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	} else if (!strcmp(cmd_text, "verify")) {
 		if (argc == 5) {
 			command = CMD_VERIFY;
@@ -350,6 +355,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	} else if (!strcmp(cmd_text, "erase-all")) {
 		if (argc == 3) {
 			command = CMD_ERASE_ALL;
@@ -357,7 +363,8 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
-	}else if (!strcmp(cmd_text, "erase-pages")) {
+
+	}else if (!strcmp(cmd_text, "erase-pages")) {  
 		if (argc == 4) {
 			command = CMD_ERASE_PAGES;
 			addr = strtol(argv[3], NULL, 0);
@@ -365,6 +372,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	}else if (!strcmp(cmd_text, "identify")) {
 		if (argc == 3) {
 			command = CMD_IDENTIFY;
@@ -372,6 +380,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	}  else if (!strcmp(cmd_text, "gpnvm")) {
 		if (argc == 5) {
 			if (!strcmp(argv[3], "get")) {
@@ -392,6 +401,7 @@ int main(int argc, char *argv[])
 		} else {
 			fprintf(stderr, "Error: invalid number of arguments\n");
 		}
+
 	}else if (!strcmp(cmd_text, "exit-samba")) {
 		if (argc == 3) {
 			command = CMD_EXIT_SAMBA;
@@ -409,6 +419,7 @@ int main(int argc, char *argv[])
 		} 
 
 	}else {
+		err = true;
 		fprintf(stderr, "Error: unknown command '%s'\n", cmd_text);
 	}
 	if (err) {
@@ -627,6 +638,7 @@ int main(int argc, char *argv[])
             unsigned char buffer2[BufferSize];
 
             ptr = fopen("uniqueIdentifier.bin","rb");
+            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
             printf("Unique ID: ");
             for(i = 0; i < 20; i++){
                printf("%c", (int)buffer2[i]);
