@@ -30,6 +30,7 @@
 #define EEFC_FCR_STUI  0x5A00000E
 #define EEFC_FCR_ADDR  0x400E0C04
 #define EEFC_FCR_SPUI  0x5A00000F
+
 char information[65];
 
 static bool get_file_size(const char* filename, uint32_t* size)
@@ -147,6 +148,7 @@ static bool verify_flash(int fd, const struct _chip* chip, const char* filename,
 	return true;
 	fclose(file);
 }
+
 void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool err)
 {
          information[0] = 'D';
@@ -206,11 +208,11 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
 
 static void usage(char* prog)
 {
-	printf("Usage: %s <port> (read|write|verify|erase-all|gpnvm) [args]*\n", prog);
+	printf("Usage: %s <port> (read|write|verify|erase-all|erase-pages|ext-read|ext-write|ext-erase-all|gpnvm|identify|reset|exit-samba) [args]*\n", prog);
 	printf("\n");
 	printf("- Reading Flash:\n");
 	printf("    %s <port> read <filename> <start-address> <size>\n", prog);
-	printf("    Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial ID  \n", prog);
+	printf("    Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial Number  \n", prog);
 	printf("\n");
 	printf("- Writing Flash:\n");
 	printf("    %s <port> write <filename> <start-address>\n", prog);
@@ -221,7 +223,7 @@ static void usage(char* prog)
 	printf("- Erasing Flash:\n");
 	printf("    %s <port> erase-all\n", prog);
 	printf("\n");
-    printf("- Erase 16 Pages:\n");
+   printf("- Erase 16 Pages:\n");
 	printf("    %s <port> erase-pages <first-page>\n", prog);
 	printf("\n");
    printf("- Reading External Flash:\n");
@@ -236,14 +238,14 @@ static void usage(char* prog)
 	printf("- Getting/Setting/Clearing GPNVM:\n");
 	printf("    %s <port> gpnvm (get|set|clear) <gpnvm_number>\n", prog);
 	printf("\n");
-	printf("- Exit Samba: \n");
-	printf("    %s <port> exit-samba\n", prog);
-	printf("\n");
-	printf("- Identify chip by its unique identifier code and serial number:\n");
+	printf("- Identify Chip's unique identifier code & serial number:\n");
 	printf("    %s <port> identify\n", prog);
 	printf("\n");
 	printf("- Reset device:\n");
 	printf("    %s <port> reset\n", prog);
+	printf("\n");
+	printf("- Exit Samba: \n");
+	printf("    %s <port> exit-samba\n", prog);
 	printf("\n");
 	printf("for all commands:\n");
 	printf("    <port> is the USB device node for the SAM-BA bootloader, for\n");

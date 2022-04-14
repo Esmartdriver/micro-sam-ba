@@ -18,7 +18,8 @@ more information).  When the device is in this mode, it will be enumerated as:
 
 # Usage
 
-Usage: ``./usamba <port> (read|write|verify|erase-all|gpnvm) [args]*``
+Usage: ``./usamba <port> (read|write|verify|erase-all|erase-pages|ext-read|ext-write|ext-erase-all|gpnvm|exit-samba|identify|reset) [args]*``
+
 
 - Read Flash:
     ``./usamba <port> read <filename> <start-address> <size>``
@@ -31,9 +32,30 @@ Usage: ``./usamba <port> (read|write|verify|erase-all|gpnvm) [args]*``
 
 - Erase Flash:
     ``./usamba <port> erase-all``
+    
+- Erase 16 Pages:
+    ``./usamba <port> erase-pages <first-page>``
+
+- Reading External Flash:
+    ``./usamba <port> ext-read <filename> <start-address> <size>``
+
+- Writing External Flash:
+    ``./usamba <port> ext-write <filename> <start-address>``
+
+- Erasing External Flash:
+    ``./usamba <port> ext-erase-all``
 
 - Get/Set/Clear GPNVM:
     ``./usamba <port> gpnvm (get|set|clear) <gpnvm_number>``
+
+- Identify Chip's unique identifier code & serial number:
+    ``./usamba <port> identify``
+    
+- Reset device:
+    ``./usamba <port> reset``
+    
+- Exit Samba:
+    ``./usamba <port> exit-samba``
 
 for all commands:
     ``<port>`` is the USB device node for the SAM-BA bootloader, for
