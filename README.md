@@ -18,12 +18,13 @@ more information).  When the device is in this mode, it will be enumerated as:
 
 # Usage
 
-Usage: ``./usamba <port> (read|write|verify|erase-all|erase-pages|ext-read|ext-write|ext-erase-all|gpnvm|exit-samba|identify|reset) [args]*``
+Usage: ``./usamba <port> (read|write|verify|erase-all|erase-pages|ext-read|ext-write|ext-erase-all|gpnvm|identify|reset|exit-samba) [args]*``
 
 
 - Read Flash:
     ``./usamba <port> read <filename> <start-address> <size>``
-
+       Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial Number
+       
 - Write Flash:
     ``./usamba <port> write <filename> <start-address>``
 

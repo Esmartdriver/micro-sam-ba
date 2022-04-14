@@ -179,7 +179,6 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
             unsigned char buffer2[BufferSize];
 
             ptr = fopen("uniqueIdentifier.bin","rb");
-            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
             printf("Unique ID: ");
             for(i = 1; i < 19; i++){
             	printf("%c", (int)buffer2[i]);
@@ -212,7 +211,7 @@ static void usage(char* prog)
 	printf("\n");
 	printf("- Reading Flash:\n");
 	printf("    %s <port> read <filename> <start-address> <size>\n", prog);
-	printf("    Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial Number  \n", prog);
+	printf("    Note: you may forgo the filename and the program will automatically make its own filename with the Unique ID & Serial Number\n");
 	printf("\n");
 	printf("- Writing Flash:\n");
 	printf("    %s <port> write <filename> <start-address>\n", prog);
@@ -258,17 +257,17 @@ enum {
 	CMD_READ = 1,
 	CMD_READ_CUSTOM_NAME = 2,
 	CMD_WRITE = 3,
-	CMD_ERASE_ALL = 4,
-   CMD_ERASE_PAGES = 5,
-	CMD_VERIFY = 6,
-	CMD_GPNVM_GET = 7,
-	CMD_GPNVM_SET = 8,
-	CMD_GPNVM_CLEAR = 9,
-	CMD_RESET = 10,
-	CMD_IDENTIFY = 11,
-	CMD_READ_EXT_FLASH = 12,
-	CMD_WRITE_EXT_FLASH = 13,
-	CMD_ERASE_EXT_FLASH = 14,
+   CMD_VERIFY = 4,
+	CMD_ERASE_ALL = 5,
+   CMD_ERASE_PAGES = 6,
+	CMD_READ_EXT_FLASH = 7,
+	CMD_WRITE_EXT_FLASH = 8,
+	CMD_ERASE_EXT_FLASH = 9,
+	CMD_GPNVM_GET = 10,
+	CMD_GPNVM_SET = 11,
+	CMD_GPNVM_CLEAR = 12,
+	CMD_IDENTIFY = 13,
+	CMD_RESET = 14,
 	CMD_EXIT_SAMBA = 15,
 };
 
@@ -628,7 +627,6 @@ int main(int argc, char *argv[])
             unsigned char buffer2[BufferSize];
 
             ptr = fopen("uniqueIdentifier.bin","rb");
-            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
             printf("Unique ID: ");
             for(i = 0; i < 20; i++){
                printf("%c", (int)buffer2[i]);
