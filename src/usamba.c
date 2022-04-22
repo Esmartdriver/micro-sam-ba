@@ -23,13 +23,26 @@
 #include "eefc.h"
 #include "utils.h"
 
-#define BUFFER_SIZE 8192
-#define RESET_CR_ADDR 0x400e1800
-#define RESET_KEY 0xA5000009
-#define GPNVM_BIT1 1
+#define BUFFER_SIZE    8192
+#define RESET_CR_ADDR  0x400e1800
+#define RESET_KEY      0xA5000009
+#define GPNVM_BIT1     0x00000001
 #define EEFC_FCR_STUI  0x5A00000E
 #define EEFC_FCR_ADDR  0x400E0C04
 #define EEFC_FCR_SPUI  0x5A00000F
+#define QSPI_MR_ADDR   0x4007C004
+#define QSPI_MR_SERIAL 0x00000001
+#define QSPI_ICR_ADDR  0x4007C034  //QSPI Instruction Code Register Address
+#define QSPI_ICR_FREAD 0x00000005  //FAST READ Instruction
+#define QSPI_IFR_ADDR  0x4007C038  //QSPI Instruction Frame Register Address
+#define QSPI_ICR_START 0x01000096  //Value to Start transfer
+#define QSPI_IMR_ADDR  0x4007C01C  //QSPI Interrupt Mask Register Address
+#define QSPI_RDR_ADDR  0x4007C008  //QSPI Receive Data Register Address
+#define QSPI_CR_ADDR   0x4007C000  //QSPI Control Register Address 24th bit for LASTXFER
+#define QSPI_SR_ADDR   0x4007C010  //QSPI Status Register Address 10th bit for  INSTRE
+
+
+//#define DEBUG
 
 char information[65];
 
@@ -157,32 +170,48 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
          information[3] = 'P';
          information[4] = '_';
 
+         #if defined(DEBUG)
 			printf("Identifying device by unique identifier\n");
+			#endif
 			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)){
 				err = false;
+				#if defined(DEBUG)
 				printf("STUI command sent successfully...\n");
+				#endif
 			}
+			#if defined(DEBUG)
 			printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0 , "uniqueIdentifier.bin");
+			#endif
 			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
 				err = false;
 			}
-						printf("Identifying device by unique identifier\n");
+
+			#if defined(DEBUG)
+			printf("Identifying device by unique identifier\n");
+			#endif
 			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)){
 				err = false;
+				#if defined(DEBUG)
 				printf("SPUI command sent successfully...\n");
+				#endif
 			}
-
+         #if defined(DEBUG)
 			printf("Converting Binaries to Readable...\n");
+			#endif
             static const size_t BufferSize = 1024;
    		    int i;
             FILE *ptr;
             unsigned char buffer2[BufferSize];
 
             ptr = fopen("uniqueIdentifier.bin","rb");
-            const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+            fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+            #if defined(DEBUG)
             printf("Unique ID: ");
+            #endif
             for(i = 1; i < 19; i++){
+            	#if defined(DEBUG)
             	printf("%c", (int)buffer2[i]);
+            	#endif
                if(!( '\0'==  buffer2[i]))
                information[i+4] =  buffer2[i];
                else 
@@ -190,19 +219,24 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
                }
             information[23] =  '_';
             information[24] =  '_';
+            #if defined(DEBUG)
             printf("\nSerial Number:");
+            #endif
             for(i = 119; i < 150; i++){
+            	#if defined(DEBUG)
             	printf("%c", (int)buffer2[i]);
+            	#endif
             	if(!( '\0'==  buffer2[i]))
                information[i-99] = buffer2[i];
                else 
                	information[i-99] =  ' ';
             }
+            #if (defined(DEBUG))
             printf("\n");
+            #endif
             
             fclose (ptr);
             information[64] = '\0'; 
-            printf("\n");
             
 }
 
@@ -436,25 +470,31 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Could not open port\n");
 		return -1;
 	} else {
-		printf(">>>port is open\n");
+		   #if defined(DEBUG)
+			printf(">>>port is open\n");
+			#endif
 	}
+	#if defined(DEBUG)
     perror("reading chip id");
-
+    #endif
 	//Identify chip
 	const struct _chip* chip;
 	if (!chipid_identity_serie(fd, &chip)) {
 		fprintf(stderr, "Could not identify chip\n");
 		goto exit;
 	}
-	
+	#if defined(DEBUG)
 	printf("Device: Atmel %s\n", chip->name);
+	#endif
 	// Read and check flash information
 	struct _eefc_locks locks;
 	if (!eefc_read_flash_info(fd, chip, &locks)) {
 		fprintf(stderr, "Could not read flash information\n");
 		goto exit;
 	}
+	#if defined(DEBUG)
 	printf("Flash Size: %uKB\n", chip->flash_size);
+	#endif
 
 	// Execute command
 	switch (command) {
@@ -532,9 +572,37 @@ int main(int argc, char *argv[])
 		}
 		case CMD_READ_EXT_FLASH:
 		{
+			#if defined(DEBUG)
+			printf("Switching into QSPI Serial Mode\n");
+			#endif
+			if (samba_write_word(fd, QSPI_MR_ADDR, QSPI_MR_SERIAL)){
+				err = false;
+				#if defined(DEBUG)
+				printf("Switch to QSPI Serial Mode was Successful...\n");
+				#endif
+			}
+			#if defined(DEBUG)
+			printf("Writing instruction to follow\n");
+			#endif			
+			if (samba_write_word(fd, QSPI_ICR_ADDR, QSPI_ICR_FREAD)){
+				err = false;
+				#if defined(DEBUG)
+				printf("successfully wrote instruction in Register...\n");
+				#endif
+			}
+			#if defined(DEBUG)
+			printf("Begin Transfer of Data...\n");
+			#endif			
+			if (samba_write_word(fd, QSPI_IFR_ADDR, QSPI_ICR_START)){
+				err = false;
+				#if defined(DEBUG)
+				printf(" Successfully Wrote instruction to Start Transfer of Data...\n");
+				#endif
+			}
+
 			printf("CMD: READ\n");
 			printf("Reading %d bytes at 0x%08x to file '%s'\n", size, addr, filename);
-			if (read_flash(fd, chip, addr, size, filename)) {
+			if (read_flash(fd, chip, QSPI_RDR_ADDR, size, filename)) {
 				err = false;
 			}
 			break;

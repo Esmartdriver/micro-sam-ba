@@ -1,3 +1,6 @@
+cd ..
+make
+cd scripts/
 #!/bin/bash
 echo "ACM Ports Available:"
 ls /dev/ |grep ACM
