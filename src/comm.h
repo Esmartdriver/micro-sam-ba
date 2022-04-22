@@ -30,3 +30,5 @@ extern bool samba_read(int fd, uint8_t* buffer, uint32_t addr, uint32_t size);
 extern bool samba_write(int fd, uint8_t* buffer, uint32_t addr, uint32_t size);
 
 #endif /* COMM_H_ */
+
+//#define DEBUG

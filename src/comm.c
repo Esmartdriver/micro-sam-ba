@@ -22,6 +22,7 @@
 #include "comm.h"
 #include "utils.h"
 
+
 static bool configure_tty(int fd, int speed)
 {
 	struct termios tty;
@@ -69,10 +70,14 @@ static int _read(int fd, void *buf, size_t count) {
 static bool switch_to_binary(int fd)
 {
 	char cmd[] = "N#";
-	printf("start switch to binary\n");
+	#if defined(DEBUG)
+    printf("start switch to binary\n");
+    #endif
 	if (write(fd, cmd, strlen(cmd)) != strlen(cmd))
 		return false;
+	#if defined(DEBUG)
 	printf("write done\n");
+	#endif
 	return _read(fd, cmd, 2) == 2;
 }
 
@@ -85,19 +90,24 @@ int samba_open(const char* device)
 		perror("Could not open device");
 		return -1;
 	}
+	#if defined(DEBUG)
 	printf("port open\n");
+	#endif
 	if (!configure_tty(fd, B115200)) {
 		perror("Could not configure");
 		close(fd);
 		return -1;
 	}
-	   	printf("switch to binary\n");	
-
+	#if defined(DEBUG)
+	printf("switch to binary\n");	
+    #endif
 	if (!switch_to_binary(fd)) {
 		close(fd);
 		return -1;
 	}
+    #if defined(DEBUG)
 	printf("finished port open\n");
+	#endif
 	return fd;
 }
 
@@ -126,30 +136,44 @@ bool samba_read(int fd, uint8_t* buffer, uint32_t addr, uint32_t size)
 {
 	char cmd[20];
 	while (size > 0) {
+		#if defined(DEBUG)
 		printf("reading addr %#x\n", addr);
+		#endif
 		uint32_t count = MIN(size, 1024);
+		#if defined(DEBUG)
 		printf("count is %d\n", count);
+		#endif
 		// workaround for bug when size is exactly 512
 		if (count == 512){
+			#if defined(DEBUG)
 			printf("apply workaround \n");
+			#endif
 			count = 1;
 		}
 		snprintf(cmd, sizeof(cmd), "R%08x,%08x#", addr, count);
-				printf("write-cmd is %s \n", cmd);
+		#if defined(DEBUG)
+		printf("write-cmd is %s \n", cmd);
+		#endif
 		if (write(fd, cmd, strlen(cmd)) != strlen(cmd)){
     
 			printf("cmd-write failed\n");
 			return false;
 		
 		} else {
+			#if defined(DEBUG)
 			printf("cmd-write done\n");
+			#endif
 		}
+		#if defined(DEBUG)
         printf("read-cmd start...\n");
+        #endif
 		if (read(fd, buffer, count) != count){
 			printf("cmd-read failed\n");
 			return false;
 		} else {
+			#if defined(DEBUG)
 			printf("cmd-read done\n");
+			#endif
 		}
 		addr += count;
 		buffer += count;

@@ -42,7 +42,7 @@
 #define QSPI_SR_ADDR   0x4007C010  //QSPI Status Register Address 10th bit for  INSTRE
 
 
-//#define DEBUG
+
 
 char information[65];
 
@@ -236,6 +236,18 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
             #endif
             
             fclose (ptr);
+            if( remove( "uniqueIdentifier.bin" ) != 0 )
+            {
+              #if (defined(DEBUG))
+              printf( "Error deleting file\n" );
+              #endif
+            }
+            else
+            {
+              #if (defined(DEBUG))
+              printf( "File successfully deleted\n" );
+              #endif
+            }
             information[64] = '\0'; 
             
 }
