@@ -172,84 +172,91 @@ void identify_uniqueID(int fd, const struct _chip* chip, char* filename, bool er
          information[4] = '_';
 
          #if defined(DEBUG)
-			printf("Identifying device by unique identifier\n");
-			#endif
-			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)){
-				err = false;
-				#if defined(DEBUG)
-				printf("STUI command sent successfully...\n");
-				#endif
-			}
-			#if defined(DEBUG)
-			printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0 , "uniqueIdentifier.bin");
-			#endif
-			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
-				err = false;
-			}
-
-			#if defined(DEBUG)
-			printf("Identifying device by unique identifier\n");
-			#endif
-			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)){
-				err = false;
-				#if defined(DEBUG)
-				printf("SPUI command sent successfully...\n");
-				#endif
-			}
+         printf("Identifying device by unique identifier\n");
+         #endif
+         if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)) 
+         {
+            err = false;
+            #if defined(DEBUG)
+            printf("STUI command sent successfully...\n");
+            #endif
+         }
          #if defined(DEBUG)
-			printf("Converting Binaries to Readable...\n");
-			#endif
-            static const size_t BufferSize = 1024;
-   		    int i;
-            FILE *ptr;
-            unsigned char buffer2[BufferSize];
+         printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0, "uniqueIdentifier.bin");
+         #endif
+         if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) 
+         {
+            err = false;
+         }
 
-            ptr = fopen("uniqueIdentifier.bin","rb");
-            fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+         #if defined(DEBUG)
+         printf("Identifying device by unique identifier\n");
+         #endif
+         if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)) 
+         {
+            err = false;
             #if defined(DEBUG)
-            printf("Unique ID: ");
+            printf("SPUI command sent successfully...\n");
             #endif
-            for(i = 1; i < 19; i++){
-            	#if defined(DEBUG)
-            	printf("%c", (int)buffer2[i]);
-            	#endif
-               if(!( '\0'==  buffer2[i]))
-               information[i+4] =  buffer2[i];
-               else 
-               	information[i+4] =  ' ';
-               }
-            information[23] =  '_';
-            information[24] =  '_';
+         }
+         #if defined(DEBUG)
+         printf("Converting Binaries to Readable...\n");
+         #endif
+         static const size_t BufferSize = 1024;
+         FILE * ptr;
+         unsigned char buffer2[BufferSize];
+
+         ptr = fopen("uniqueIdentifier.bin", "rb");
+         fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
+
+         #if defined(DEBUG)
+         printf("Unique ID: ");
+         #endif
+
+         for (int i = 1; i < 19; i++) 
+         {
             #if defined(DEBUG)
-            printf("\nSerial Number:");
+            printf("%c", (int) buffer2[i]);
             #endif
-            for(i = 119; i < 150; i++){
-            	#if defined(DEBUG)
-            	printf("%c", (int)buffer2[i]);
-            	#endif
-            	if(!( '\0'==  buffer2[i]))
-               information[i-99] = buffer2[i];
-               else 
-               	information[i-99] =  ' ';
-            }
-            #if (defined(DEBUG))
-            printf("\n");
-            #endif
-            
-            fclose (ptr);
-            if( remove( "uniqueIdentifier.bin" ) != 0 )
-            {
-              #if (defined(DEBUG))
-              printf( "Error deleting temporary file for ID\n" );
-              #endif
-            }
+            if (!('\0' == buffer2[i]))
+               information[i + 4] = buffer2[i];
             else
-            {
-              #if (defined(DEBUG))
-              printf( "Temporary file for ID successfully deleted \n" );
-              #endif
-            }
-            information[64] = '\0'; 
+               information[i + 4] = ' ';
+         }
+
+         information[23] = '_';
+         information[24] = '_';
+
+         #if defined(DEBUG)
+         printf("\nSerial Number:");
+         #endif
+         for (int i = 119; i < 150; i++) 
+         {
+            #if defined(DEBUG)
+            printf("%c", (int) buffer2[i]);
+            #endif
+            if (!('\0' == buffer2[i]))
+               information[i - 99] = buffer2[i];
+            else
+               information[i - 99] = ' ';
+         }
+
+         #if(defined(DEBUG))
+         printf("\n");
+         #endif
+         fclose(ptr);
+
+         if (remove("uniqueIdentifier.bin") != 0) 
+         {
+            printf("Error deleting temporary file for ID\n");
+         } 
+         else 
+         {
+            #if(defined(DEBUG))
+            printf("Temporary file for ID successfully deleted \n");
+            #endif
+         }
+         information[64] = '\0';
             
 }
 
@@ -686,7 +693,7 @@ int main(int argc, char *argv[])
 
 		case CMD_RESET:
 		{
-			printf("Reseting device...\n");
+			printf("Resetting device...\n");
 			if (samba_write_word(fd, RESET_CR_ADDR, RESET_KEY)){
 				err = false;
 			}
@@ -698,7 +705,8 @@ int main(int argc, char *argv[])
 			
 
 			printf("Identifying device...\n");
-			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI)){
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_STUI))
+			{
 				err = false;
 				#if defined(DEBUG)
 				printf("STUI command sent successfully...\n");
@@ -707,10 +715,12 @@ int main(int argc, char *argv[])
 			#if defined(DEBUG)
 			printf("Reading %d bytes at 0x%08x to file '%s'\n", 1024, 0 , "uniqueIdentifier.bin");
 			#endif
-			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) {
+			if (read_flash(fd, chip, 0, 1024, "uniqueIdentifier.bin")) 
+			{
 				err = false;
 			}
-			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI)){
+			if (samba_write_word(fd, EEFC_FCR_ADDR, EEFC_FCR_SPUI))
+			{
 				err = false;
 				#if defined(DEBUG)
 				printf("SPUI command sent successfully...\n");
@@ -720,33 +730,32 @@ int main(int argc, char *argv[])
 			printf("Converting Binaries to Readable...\n");
 			#endif
          static const size_t BufferSize = 1024;
-   		int i;
          FILE *ptr;
          unsigned char buffer2[BufferSize];
          ptr = fopen("uniqueIdentifier.bin","rb");
          const size_t fileSize = fread(buffer2, sizeof(unsigned char), BufferSize, ptr);
 
          printf("Unique ID: ");
-         for(i = 0; i < 20; i++)
+         for(int i = 0; i < 20; i++)
             printf("%c", (int)buffer2[i]);
 
          printf("\nSerial Number:");
-         for(i = 113; i < 150; i++)
+         for(int i = 113; i < 150; i++)
             printf("%c", (int)buffer2[i]);
          
          printf("\n");
          fclose (ptr);
 
-            if( remove( "uniqueIdentifier.bin" ) != 0 )
-            { 
+         if( remove( "uniqueIdentifier.bin" ) != 0 )
+           { 
               printf( "Error deleting temporary file for ID\n" );
-            }
-            else
-            {
+           }
+         else
+           {
               #if (defined(DEBUG))
               printf( "Temporary file for ID successfully deleted \n" );
               #endif
-            }
+           }
             
             
 			break;
